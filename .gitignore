@@ -5,3 +5,6 @@ __pycache__/
 .DS_Store
 *.bin
 *.pt
+model/distilbert/
+*.safetensors
+*.pth
