@@ -11,3 +11,4 @@ class PredictionResponse(BaseModel):
     confidence: float
     probabilities: dict
     recommendations: list
+    translated_text: Optional[str] = None

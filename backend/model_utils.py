@@ -1,9 +1,18 @@
 import torch
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+from deep_translator import GoogleTranslator
 
-# Load model from checkpoint, tokenizer from HuggingFace
+# Model configuration
 MODEL_PATH = "../model/distilbert/checkpoint-11300"
 TOKENIZER_NAME = "distilbert-base-uncased"
+
+def translate_to_english(text: str) -> str:
+    """Translate text to English if not already in English"""
+    try:
+        translated = GoogleTranslator(source="auto", target="en").translate(text)
+        return translated
+    except Exception:
+        return text
 
 def load_model():
     """Load DistilBERT model from checkpoint and tokenizer from HuggingFace"""
@@ -13,14 +22,21 @@ def load_model():
     return model, tokenizer
 
 def predict(text: str, model, tokenizer):
-    """Predict mental health status from input text"""
+    """Predict mental health status, auto-translate to English if needed"""
+
+    # Translate to English first
+    english_text = translate_to_english(text)
+
+    # Tokenize
     inputs = tokenizer(
-        text,
+        english_text,
         return_tensors="pt",
         max_length=128,
         truncation=True,
         padding="max_length"
     )
+
+    # Get prediction
     with torch.no_grad():
         outputs = model(**inputs)
         probabilities = torch.softmax(outputs.logits, dim=1)
@@ -35,7 +51,8 @@ def predict(text: str, model, tokenizer):
     return {
         "prediction": label_map[predicted_class],
         "confidence": round(confidence, 4),
-        "probabilities": probs
+        "probabilities": probs,
+        "translated_text": english_text
     }
 
 def get_recommendations(prediction: str):
