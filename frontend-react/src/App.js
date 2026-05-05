@@ -9,13 +9,8 @@ import "./App.css";
 const API_URL = "http://localhost:8000";
 
 // Demo data for sidebar on first load
-const DEMO_HISTORY = [
-  { time: "14:32", text: "ช่วงนี้รู้สึกดีขึ้นมากเลย ไปออกกำลังกายมา", prediction: "Normal",  group: "วันนี้" },
-  { time: "13:10", text: "นอนไม่หลับมา 3 คืนแล้ว รู้สึกเหนื่อยมาก",    prediction: "At-risk", group: "วันนี้" },
-  { time: "11:45", text: "วันนี้อากาศดี ไปกินข้าวกับเพื่อน",             prediction: "Normal",  group: "วันนี้" },
-  { time: "10:20", text: "ไม่อยากทำอะไรเลย รู้สึกหมดแรง หมดหวัง",     prediction: "At-risk", group: "วันนี้" },
-  { time: "09:05", text: "เครียดเรื่องงาน ไม่รู้จะรับมือยังไงดี",        prediction: "At-risk", group: "วันนี้" },
-];
+// No demo data — start empty, fill from real user input
+const DEMO_HISTORY = [];
 
 // ── Translations (TH / EN) ──────────────────────────────────
 const TEXT = {
@@ -571,17 +566,36 @@ export default function App() {
   const [dark,    setDark]    = useState(true);
   const [lang,    setLang]    = useState("TH");
   const [page,    setPage]    = useState("analyze");
-  const [history, setHistory] = useState(DEMO_HISTORY);
+  // Load history from localStorage on first render
+const [history, setHistory] = useState(() => {
+  try {
+    const saved = localStorage.getItem("mindsafe_history");
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+});
 
   // Add result to history after analysis
   const handleResult = (result) => {
-    setHistory(prev => [...prev, {
-      time:       new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}),
-      text:       result.text,
-      prediction: result.prediction,
-      group:      lang==="TH"?"วันนี้":"Today",
-    }]);
+  const newEntry = {
+    time:       new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}),
+    date:       new Date().toLocaleDateString("th-TH"),
+    text:       result.text,
+    prediction: result.prediction,
+    group:      new Date().toLocaleDateString(
+                  lang==="TH" ? "th-TH" : "en-US",
+                  { day:"numeric", month:"long" }
+                ),
   };
+  setHistory(prev => {
+    const updated = [...prev, newEntry];
+    // Save to localStorage every time
+    try { localStorage.setItem("mindsafe_history", JSON.stringify(updated)); }
+    catch { console.error("localStorage save failed"); }
+    return updated;
+  });
+};
 
   const renderPage = () => {
     switch(page) {
