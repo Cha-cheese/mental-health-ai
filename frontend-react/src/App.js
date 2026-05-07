@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import "./App.css";
 
-const API_URL = "http://localhost:8000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
 // Demo data for sidebar on first load
 // No demo data — start empty, fill from real user input

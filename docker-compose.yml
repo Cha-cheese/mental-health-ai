@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+
+  # ── Backend FastAPI ────────────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: mindsafe-backend
+    ports:
+      - "8000:8000"     # เครื่องเรา:container
+    volumes:
+      - ./model:/app/model  # แชร์โฟลเดอร์ model
+    restart: unless-stopped # restart อัตโนมัติถ้า crash
+
+  # ── Frontend React ─────────────────────────────────────────
+  frontend:
+    build: ./frontend-react
+    container_name: mindsafe-frontend
+    ports:
+      - "3000:80"       # เครื่องเรา port 3000 → container port 80
+    depends_on:
+      - backend         # รอ backend ก่อนค่อยรัน
+    restart: unless-stopped

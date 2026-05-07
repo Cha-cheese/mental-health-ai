@@ -1,0 +1,5 @@
+# Exclude these from Docker image
+node_modules/
+build/
+.env
+.DS_Store

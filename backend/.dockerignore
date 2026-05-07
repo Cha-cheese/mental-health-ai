@@ -1,0 +1,8 @@
+# Exclude these from Docker image to keep it small
+venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+*.bin
+*.pt
