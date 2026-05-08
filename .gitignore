@@ -9,3 +9,4 @@ model/distilbert/
 *.safetensors
 *.pth
 backend/build/
+!backend/model/model.joblib
