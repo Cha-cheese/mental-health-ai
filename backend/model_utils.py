@@ -1,12 +1,12 @@
-import torch
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+# MindSafe AI — Lightweight Model Utils
+# Uses TF-IDF + Logistic Regression (~50MB RAM vs 512MB for BERT)
+
+import joblib
+import os
 from deep_translator import GoogleTranslator
 
-# Load from HuggingFace Hub instead of local file
-# This works on any server without needing large model files
-MODEL_NAME = "distilbert-base-uncased"
-
-translator = Translator() if False else None  # lazy init
+# Path to lightweight model
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "model.joblib")
 
 def translate_to_english(text: str) -> str:
     """Translate text to English if not already English"""
@@ -16,38 +16,27 @@ def translate_to_english(text: str) -> str:
         return text
 
 def load_model():
-    """Load tokenizer and model from HuggingFace"""
-    tokenizer = DistilBertTokenizer.from_pretrained(MODEL_NAME)
-    model     = DistilBertForSequenceClassification.from_pretrained(
-        MODEL_NAME,
-        num_labels=2
-    )
-    model.eval()
-    return model, tokenizer
+    """Load lightweight sklearn pipeline"""
+    model = joblib.load(MODEL_PATH)
+    return model, None  # None = no separate tokenizer needed
 
-def predict(text: str, model, tokenizer):
-    """Translate text then predict mental health status"""
+def predict(text: str, model, tokenizer=None):
+    """Translate then predict using sklearn pipeline"""
     english_text = translate_to_english(text)
-    inputs = tokenizer(
-        english_text,
-        return_tensors="pt",
-        max_length=128,
-        truncation=True,
-        padding="max_length"
-    )
-    with torch.no_grad():
-        outputs      = model(**inputs)
-        probs        = torch.softmax(outputs.logits, dim=1)
-        pred_class   = torch.argmax(probs, dim=1).item()
-        confidence   = probs[0][pred_class].item()
+
+    # Get prediction and probability
+    pred_class   = model.predict([english_text])[0]
+    proba        = model.predict_proba([english_text])[0]
+    confidence   = float(proba[pred_class])
 
     label_map = {0: "Normal", 1: "At-risk"}
+
     return {
         "prediction":      label_map[pred_class],
         "confidence":      round(confidence, 4),
         "probabilities":   {
-            "Normal":   round(probs[0][0].item(), 4),
-            "At-risk":  round(probs[0][1].item(), 4),
+            "Normal":  round(float(proba[0]), 4),
+            "At-risk": round(float(proba[1]), 4),
         },
         "translated_text": english_text,
     }
