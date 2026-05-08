@@ -6,7 +6,9 @@
 import React, { useState } from "react";
 import "./App.css";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+const API_URL = process.env.NODE_ENV === "production"
+  ? ""         
+  : "http://localhost:8000";  
 
 // Demo data for sidebar on first load
 // No demo data — start empty, fill from real user input
@@ -252,7 +254,7 @@ function AnalyzePage({ onResult, lang }) {
     if (!text.trim()) { setError(t.err_empty); return; }
     setLoading(true); setError(null); setResult(null);
     try {
-      const res  = await fetch(`${API_URL}/analyze`, {
+      const res  = await fetch(`${API_URL}/api/analyze`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ text }),
       });
